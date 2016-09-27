@@ -8,6 +8,8 @@ Il est développé par Philippe Verkerk (@PhVerkerk) avec l'aide de Régis Robin
 
 Eulexis sur le site Biblissima : [http://outils.biblissima.fr/eulexis](http://outils.biblissima.fr/eulexis)
 
+Les fichiers de données utilisés par le script sont téléchargeables séparément : [http://outils.biblissima.fr/resources/eulexis/data.tar.gz](http://outils.biblissima.fr/resources/eulexis/data.tar.gz)
+
 ## Licence
 
 Ce programme est mis à disposition par Philippe Verkerk sous licence [Creative Commons Attribution-NonCommercial 4.0 International License](http://creativecommons.org/licenses/by-nc/4.0/) (CC BY-NC).
