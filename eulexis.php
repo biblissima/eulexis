@@ -1,4 +1,5 @@
 <?php
+
 /****************************************************************
  **                 fonctions                                  **
  ****************************************************************/
@@ -105,6 +106,9 @@ function nettoie($mot) {
   $lettres = array('Α', 'Β', 'Γ', 'Δ', 'Ε', 'Ζ', 'Η', 'Θ', 'Ι', 'Κ', 'Λ', 'Μ', 'Ν', 'Ξ', 'Ο', 'Π', 'Ρ', 'Σ', 'Τ', 'Υ', 'Φ', 'Χ', 'Ψ', 'Ω');
   $grec = array('α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω');
   $mot = str_replace($lettres, $grec, $mot);
+  // Ajout pour remplacer un éventuel σ en fin de mot par un ς
+  if (strrpos($mot, 'σ') == (strlen($mot) - 2) && strlen($mot) != 1)
+    $mot = substr($mot, 0, strlen($mot) - 2) . 'ς';
 
   return $mot;
 }
@@ -215,7 +219,6 @@ if (!$consultation) {
     $_SESSION['exacte'] = false;
   // La checkbox n'existe que si elle est validée
   $f_exacte = $_SESSION['exacte'];
-  $grec = str_replace(chr(10),chr(10)." ",$grec);
   $mots = explode(" ", $grec);
   // $lemmata = $mots;
   $ponct = array('"', ",", ";", ":", ".", "?", chr(13), chr(10));
@@ -243,7 +246,7 @@ if (!$consultation) {
         $l_formes = "";
         $nn_f = 0;
         while ($mot == $eclats[0]) {
-          fseek($file, (int) $eclats[1]);
+          fseek($file, $eclats[1]);
           $l_mot = explode("{", fgets($file));
           $mot_tr = $l_mot[0];
           $mot_tr = substr($mot_tr, 0, strlen($mot_tr) - 1);
@@ -392,7 +395,7 @@ if (!$consultation) {
     $tableau = $lemme . " : Non trouvé";
   }
   while ($mot == $eclats[0]) {
-    fseek($file, (int) $eclats[1]);
+    fseek($file, $eclats[1]);
     $ligne = trim(fgets($file));
     $liste = explode(chr(9), $ligne);
     $mot_t = $liste[0];
@@ -569,7 +572,7 @@ if (!$consultation) {
     $ici = $avant + 1;
   $lg_titre = "<ul class='pager'><li class='previous'>";
   //$lg_titre .= "<a href='index.php?pos_ind=" . $a[$avant] . "#haut_de_page'>&larr; " . $b[$avant] . "</a>";
-  $lg_titre .= "<a href='#' data-pos='" . $a[$avant] . "'><span aria-hidden='true'>&larr;</span> " . $b[$avant] . "</a>";
+  $lg_titre .= "<a href='#' data-pos='" . $a[$avant] . "'>&larr; " . $b[$avant] . "</a>";
   $lg_titre .= "</li>";
   $lg_titre .= "<li class='lead'>";
   if ($ici - $avant > 1)
@@ -579,7 +582,7 @@ if (!$consultation) {
   $lg_titre .= "</strong></li>";
   $lg_titre .= "<li class='next'>";
   //$lg_titre .= "<a href='index.php?pos_ind=" . $a[$ici + 1] . "#haut_de_page'>" . $b[$ici + 1] . " &rarr;</a>";
-  $lg_titre .= "<a href='#' data-pos='" . $a[$ici + 1] . "'>" . $b[$ici + 1] . " <span aria-hidden='true'> &rarr;</span></a>";
+  $lg_titre .= "<a href='#' data-pos='" . $a[$ici + 1] . "'>" . $b[$ici + 1] . " &rarr;</a>";
   $lg_titre .= "</li></ul>";
   $b[$avant + 1] = "<li class='lead'>" . $b[$avant + 1] . "</li>";
 
@@ -594,19 +597,30 @@ if (!$consultation) {
     $le_Bailly = true;
   }
 
+// Un include pour retrouver les noms des dicos indexés
+  include "data/index_com.inc";
+
   if ($y_LSJ != 0 && $le_LSJ) {
-    $f1 = fopen("data/LSJ_1940_Ph.txt", "r");
+//    $f1 = fopen("data/LSJ-6.5.1.txt", "r");
+// Juin 2017 : le LSJ_1940_Ph devient LSJ.6.4
+    $f1 = fopen("data/" . $LSJ_name, "r");
     for ($i = 0; $i < $y_LSJ; $i++) {
       fseek($f1, $pos_lsj[$i]);
       $lsj = fgets($f1);
       $lsj = substr_replace($lsj, "</b></span>", $len_lsj[$i], 0);
       $lsj = "<span style='color:red'><b>" . $lsj;
-      $l_ii = "";
+      $l_ii = [];
       $l_ii[0] = 0;
       if (stripos($lsj, " v. ") > 0)
         $l_ii = liste_pos($lsj, " v. ", $l_ii);
+      if (stripos($lsj, " v. sub ") > 0)
+        $l_ii = liste_pos($lsj, " v. sub ", $l_ii);
+      if (stripos($lsj, "(v. ") > 0)
+        $l_ii = liste_pos($lsj, "(v. ", $l_ii);
       if (stripos($lsj, " = ") > 0)
         $l_ii = liste_pos($lsj, " = ", $l_ii);
+      if (stripos($lsj, ".</i> for ") > 0)
+        $l_ii = liste_pos($lsj, ".</i> for ", $l_ii);
 
       // J'ai constitué une liste de tous les renvois possibles.
       $iii = count($l_ii) - 1;
@@ -615,7 +629,7 @@ if (!$consultation) {
         while ($iii > 0) {
           $ii = $l_ii[$iii];
           // Il y a probablement un renvoi.
-          if (ord(substr($lsj, $ii, 1)) > 191) {
+          if (ord(substr($lsj, $ii, 1)) > 127) {
             // ça se confirme
             $debut = $ii;
             $max = strlen($lsj);
@@ -630,12 +644,43 @@ if (!$consultation) {
           $iii = $iii - 1;
         }
       }
-      $lsj_tot .= $lsj . "<br /><br />\n"; // $lsj_tot contient tous les articles du LSJ concernant le lemme demandé
+      $lsj_tot .= $lsj . "<br /><br />\n";
     }
     fclose($f1);
+    /* J'ai fait un fichier qui contient la liste des oeuvres utilisées dans le LSJ.
+     * Elles sont citées avec des abréviations standardisées (?).
+     * J'ai mis des ancres dans le fichiers data/Liste_Auteurs_LSJ.htm
+     * La liste de abréviations est dans data/Ref_LSJ.csv
+     * 
+     * On pourrait ajouter un bouton "Lier les références du LSJ"
+     * dans le formulaire de consultation.
+     * Si le booléen $lier_ref reflète l'état du bouton,
+     * le bloc pourrait être soumis à un if (commenté pour l'instant)
+     * 
+     */
+    // if ($lier_ref) {
+    $file = fopen("data/Ref_LSJ.csv", "r");
+    $x_ref = 0;
+    while (!feof($file)) {
+       $ligne = fgets($file);
+       $eclats = explode(chr(9), $ligne);
+       $ref_avant[$x_ref] = $eclats[0];
+       $tooltip = str_replace("'", "&#39;", $eclats[4]);
+       $ref_apres[$x_ref] = "<span class='info-lemme' data-toggle='tooltip' title='" . $tooltip . "'><a target='_blank' href='/ajax/eulexis/data/Liste_Auteurs_LSJ/index.htm#" . $eclats[3] . "'>" . $eclats[0] . "</a></span>";
+       $ref_pendant[$x_ref] = "@" . $x_ref . "@";
+       $x_ref = $x_ref + 1;
+       }
+    fclose($file);
+    $lsj_tot = str_replace($ref_avant, $ref_pendant, $lsj_tot);
+    $lsj_tot = str_replace($ref_pendant, $ref_apres, $lsj_tot);
+    // }
+    // Fin du passage ajouté le 13 septembre 2014. Philippe.
+    // Jamais mis en ligne avant juin 2017. Ph.
   }
   if ($y_Pape != 0 && $le_Pape) {
-    $f1 = fopen("data/Pape_Ph.txt", "r");
+//    $f1 = fopen("data/Pape.3.1.txt", "r");
+// Juin 2017 : Pape_Ph devient Pape.3
+    $f1 = fopen("data/" . $Pape_name, "r");
     for ($i = 0; $i < $y_Pape; $i++) {
       fseek($f1, $pos_pape[$i]);
       $pape = fgets($f1);
@@ -643,18 +688,18 @@ if (!$consultation) {
       $pape = "<span style='color:red'><b>" . $pape;
       $l_ii = "";
       $l_ii[0] = 0;
-      if (strpos($pape, " = <i>") > 0)
-        $l_ii = liste_pos($pape, " = <i>", $l_ii);
-      if (strpos($pape, " <i>= ") > 0)
-        $l_ii = liste_pos($pape, " <i>= ", $l_ii);
-      if (stripos($pape, " s. <i>") > 0)
-        $l_ii = liste_pos($pape, " s. <i>", $l_ii);
-      if (stripos($pape, "(s. <i>") > 0)
-        $l_ii = liste_pos($pape, "(s. <i>", $l_ii);
-      if (stripos($pape, "(vgl. <i>") > 0)
-        $l_ii = liste_pos($pape, "(vgl. <i>", $l_ii);
-      if (stripos($pape, " s.<i> ") > 0)
-        $l_ii = liste_pos($pape, " s.<i> ", $l_ii);
+      if (strpos($pape, " = ") > 0)
+        $l_ii = liste_pos($pape, " = ", $l_ii);
+//      if (strpos($pape, " <i>= ") > 0)
+//        $l_ii = liste_pos($pape, " <i>= ", $l_ii);
+      if (stripos($pape, " s. ") > 0)
+        $l_ii = liste_pos($pape, " s. ", $l_ii);
+      if (stripos($pape, "(s. ") > 0)
+        $l_ii = liste_pos($pape, "(s. ", $l_ii);
+      if (stripos($pape, "(vgl. ") > 0)
+        $l_ii = liste_pos($pape, "(vgl. ", $l_ii);
+      if (stripos($pape, ". für ") > 0)
+        $l_ii = liste_pos($pape, ". für ", $l_ii);
 
       // J'ai constitué une liste de tous les renvois possibles.
       $iii = count($l_ii) - 1;
@@ -665,7 +710,7 @@ if (!$consultation) {
           // Il y a probablement un renvoi.
           if (substr($pape, $ii, 1) == " ")
             $ii += 1;
-          if ((ord(substr($pape, $ii, 1)) > 191) || (substr($pape, $ii, 1) == "-")) {
+          if ((ord(substr($pape, $ii, 1)) > 127) || (substr($pape, $ii, 1) == "-")) {
             // ça se confirme
             $debut = $ii;
             $max = strlen($pape);
@@ -685,28 +730,41 @@ if (!$consultation) {
     fclose($f1);
   }
   if ($y_Bailly != 0 && $le_Bailly) {
-    $f1 = fopen("data/XMLBailly351.txt", "r");
+//    $f1 = fopen("data/Bailly.Abr.5.1.txt", "r");
+// Juin 2017 : le XMLBailly351 devient Bailly.Abr.4.3
+    $f1 = fopen("data/" . $Bailly_name, "r");
     for ($i = 0; $i < $y_Bailly; $i++) {
       fseek($f1, $pos_bailly[$i]);
       $lsj = fgets($f1);
       $lsj = substr_replace($lsj, "</b></span>", $len_bailly[$i], 0);
       $lsj = "<span style='color:red'><b>" . $lsj;
+      $ii = 0;
+      // if (stripos($lsj, " c.") > 0)
+      //   $l_ii = liste_pos($lsj, " c.", $l_ii);
+      // if (stripos($lsj, " v.") > 0)
+      //   $l_ii = liste_pos($lsj, " v.", $l_ii);
+      // if (stripos($lsj, " p.") > 0)
+      //   $l_ii = liste_pos($lsj, " p.", $l_ii);
+      // if (stripos($lsj, ">v.</i> ") > 0)
+      //   $l_ii = liste_pos($lsj, ">v.</i> ", $l_ii);
+      // if (stripos($lsj, ">p.</i> ") > 0)
+      //   $l_ii = liste_pos($lsj, ">p.</i> ", $l_ii);
+      // if (stripos($lsj, ">c.</i> ") > 0)
+      //   $l_ii = liste_pos($lsj, ">c.</i> ", $l_ii);
+      // if (stripos($lsj, ">v.</i> ") > 0)
+      //   $l_ii = liste_pos($lsj, ">v.</i> ", $l_ii);
+      // if (stripos($lsj, ">p.</i> ") > 0)
+      //   $l_ii = liste_pos($lsj, ">p.</i> ", $l_ii);
+      // if (stripos($lsj, ">c.</i> ") > 0)
+      //   $l_ii = liste_pos($lsj, ">c.</i> ", $l_ii);
       $l_ii = "";
       $l_ii[0] = 0;
-      // Il faut nettoyer la liste (résidus du LSJ et du Pape). Correction du 15 février, Ph.
-      $ii = 0;
-      if (stripos($lsj, " c.") > 0)
-        $l_ii = liste_pos($lsj, " c.", $l_ii);
-      if (stripos($lsj, " v.") > 0)
-        $l_ii = liste_pos($lsj, " v.", $l_ii);
-      if (stripos($lsj, " p.") > 0)
-        $l_ii = liste_pos($lsj, " p.", $l_ii);
-      if (stripos($lsj, ">v.") > 0)
-        $l_ii = liste_pos($lsj, ">v.", $l_ii);
-      if (stripos($lsj, ">p.") > 0)
-        $l_ii = liste_pos($lsj, ">p.", $l_ii);
-      if (stripos($lsj, ">c.") > 0)
-        $l_ii = liste_pos($lsj, ">c.", $l_ii);
+      if (stripos($lsj, " c.") > 0) $l_ii = liste_pos($lsj, " c.", $l_ii);
+      if (stripos($lsj, " v.") > 0) $l_ii = liste_pos($lsj, " v.", $l_ii);
+      if (stripos($lsj, " p.") > 0) $l_ii = liste_pos($lsj, " p.", $l_ii);
+      if (stripos($lsj, ">v.") > 0) $l_ii = liste_pos($lsj, ">v.", $l_ii);
+      if (stripos($lsj, ">p.") > 0) $l_ii = liste_pos($lsj, ">p.", $l_ii);
+      if (stripos($lsj, ">c.") > 0) $l_ii = liste_pos($lsj, ">c.", $l_ii);
 
       // J'ai constitué une liste de tous les renvois possibles.
       $iii = count($l_ii) - 1;
@@ -720,8 +778,8 @@ if (!$consultation) {
             $ii = $ii + 5;
           else
             $ii = $ii + 1;
-          if (ord(substr($lsj, $ii, 1)) > 191) {
-            // ça se confirme : début d'un caractère unicode, supposé grec.
+          if (ord(substr($lsj, $ii, 1)) > 127) {
+            // ça se confirme
             $debut = $ii;
             $max = strlen($lsj);
             while ((ord(substr($lsj, $ii, 1)) > 127) && ($ii < $max))
@@ -794,10 +852,10 @@ if ($consultation) {
 } else {
   // Affichage du texte traité
   echo "<h3>Aide à la lecture</h3>\n";
-  
   for ($x = 0; $x < count($mots); $x++) {
     //echo "<a href='#mot" . $x . "'><span class='info-lemme' data-toggle='tooltip' title='" . $titre[$x] . "'>" . $mots[$x] . "</span></a> \n";
-    echo "<a href='#mot" . $x . "'><span class='info-lemme' data-toggle='tooltip' title=\"" . str_replace("\n","<br />", $titre[$x]) . "\"> " . str_replace(chr(10),"<br />",$mots[$x]) . "</span></a> \n";
+    echo "<a href='#mot" . $x . "'><span class='info-lemme' data-toggle='tooltip' title='" . $titre[$x] . "'>";
+    echo str_replace(chr(13),"<br />", $mots[$x]) . "</span></a> \n";
   }
   echo "<h3>Lemmatisation avec les formes du texte</h3>\n";
   for ($x = 0; $x < count($mots); $x++) {
