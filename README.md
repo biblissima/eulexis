@@ -1,20 +1,24 @@
 # Eulexis
 
-Script PHP utilisé pour l'interface web d'Eulexis.
+Eulexis is a web lemmatiser for Ancient Greek texts. It allows to search for a word in ancient greek dictionaries (Liddel-Scott-Jones, Pape, Bailly), to decline a root word and lemmatise a text.
 
-Eulexis est un lemmatiseur de grec ancien. Il permet de rechercher un terme dans des dictionnaires de grec (Liddel-Scott-Jones, Pape, Bailly), de fléchir un lemme et de lemmatiser un texte.
+It is developed by Philippe Verkerk (@PhVerkerk) with the help of Régis Robineau as part of the [Biblissima Toolkit](http://outils.biblissima.fr).
 
-Il est développé par Philippe Verkerk (@PhVerkerk) avec l'aide de Régis Robineau dans le cadre de la "Boîte à Outils" de l'Equipex [Biblissima](http://www.biblissima-condorcet.fr).
+Eulexis on Biblissima website : [http://outils.biblissima.fr/eulexis](http://outils.biblissima.fr/eulexis)
 
-Eulexis sur le site Biblissima : [http://outils.biblissima.fr/eulexis](http://outils.biblissima.fr/eulexis)
+## Install
 
-Les fichiers de données utilisés par le script sont téléchargeables séparément : [http://outils.biblissima.fr/resources/eulexis/data.tar.gz](http://outils.biblissima.fr/resources/eulexis/data.tar.gz)
+In order to run your own instance of Eulexis locally, you must download the following assets:
+- data files used by `eulexis.php`: [http://outils.biblissima.fr/resources/eulexis/data.tar.gz](http://outils.biblissima.fr/resources/eulexis/data.tar.gz)
+- a sample user interface to able to use the web application: [http://outils.biblissima.fr/resources/eulexis/ui.tar.gz](http://outils.biblissima.fr/resources/eulexis/ui.tar.gz)
 
-## Licence
+You should extract these two archives at the root of your `eulexis` folder (`eulexis/data` and `eulexis/ui`).
 
-Ce programme est mis à disposition par Philippe Verkerk sous licence [Creative Commons Attribution-NonCommercial 4.0 International License](http://creativecommons.org/licenses/by-nc/4.0/) (CC BY-NC).
+## License
 
-## Crédits
+This program is made available by Philippe Verkerk under the [Creative Commons Attribution-NonCommercial 4.0 International License](http://creativecommons.org/licenses/by-nc/4.0/) (CC BY-NC).
+
+## Credits
 
 Un grand merci à Philipp Roelli, André Charbonnet, Peter J. Heslin, Yves Ouvrard, Eduard Frunzeanu et Régis Robineau.
 
