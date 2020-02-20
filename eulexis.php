@@ -243,7 +243,7 @@ if (!$consultation) {
         $forme[$x] = "Non trouvé";
         $titre[$x] = "Non trouvé";
       } else {
-        $l_formes = "";
+        $l_formes = [];
         $nn_f = 0;
         while ($mot == $eclats[0]) {
           fseek($file, $eclats[1]);
@@ -263,8 +263,8 @@ if (!$consultation) {
             $l_formes[$nn_f] = $mot_tr;
           //                  $forme[$x] .= $mot_tr;
           // Quand la forme trouvée coïncide exactement avec celle cherchée, je la mets en rouge gras.
-          $bb = "";
-          $cc = "";
+          $bb = [];
+          $cc = [];
           for ($aa = 1; $aa < count($l_mot); $aa++) {
             $ecl = explode(chr(9), $l_mot[$aa]);
             // des Tab séparent la forme, la traduction et l'analyse morphologique
@@ -294,7 +294,7 @@ if (!$consultation) {
           }
           $titre[$x] .= implode("<br/>", $bb) . "\n";
           // pour la bulle d'aide
-          $l_formes[$nn_f] .= "<ul><li>" . implode("</li>\n<li>", $cc) . "</li></ul><br />\n";
+          $l_formes[$nn_f] = $l_formes[$nn_f]."<ul><li>" . implode("</li>\n<li>", $cc) . "</li></ul><br />\n";
           $nn_f += 1;
           // pour la lemmatisation
           $titi = fgets($f_index);
