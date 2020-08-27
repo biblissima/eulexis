@@ -1,3 +1,5 @@
+*WARNING: This repository is now archived, it is superseded by the [outils.biblissima.fr](https://github.com/biblissima/outils.biblissima.fr) repository, where you will find the files and instructions to run your own instance of Eulexis locally.*
+
 # Eulexis
 
 Eulexis is a web lemmatiser for Ancient Greek texts. It allows to search for a word in ancient greek dictionaries (Liddel-Scott-Jones, Pape, Bailly), to decline a root word and lemmatise a text.
